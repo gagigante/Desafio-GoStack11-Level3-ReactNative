@@ -35,7 +35,7 @@ const CartProvider: React.FC = ({ children }) => {
       );
 
       if (storagedProducts) {
-        setProducts(JSON.parse(storagedProducts));
+        setProducts([...JSON.parse(storagedProducts)]);
       }
     }
 
@@ -44,21 +44,17 @@ const CartProvider: React.FC = ({ children }) => {
 
   const addToCart = useCallback(
     async (product: Product) => {
-      const productIndex = products.findIndex(
-        element => element.id === product.id,
-      );
+      const productExists = products.find(p => p.id === product.id);
 
-      let updatedProducts = [] as Product[];
-
-      if (productIndex === -1) {
-        updatedProducts = products;
-        updatedProducts.push({ ...product, quantity: 1 });
+      if (productExists) {
+        setProducts(
+          products.map(p =>
+            p.id === product.id ? { ...product, quantity: p.quantity + 1 } : p,
+          ),
+        );
       } else {
-        updatedProducts = products;
-        updatedProducts[productIndex].quantity += 1;
+        setProducts([...products, { ...product, quantity: 1 }]);
       }
-
-      setProducts([...updatedProducts]);
 
       await AsyncStorage.setItem(
         '@GoMarketPlace:products',
@@ -70,16 +66,15 @@ const CartProvider: React.FC = ({ children }) => {
 
   const increment = useCallback(
     async (id: string) => {
-      const productIndex = products.findIndex(product => product.id === id);
+      const newProducts = products.map(p =>
+        p.id === id ? { ...p, quantity: p.quantity + 1 } : { ...p },
+      );
 
-      const newProducts: Product[] = products;
-      newProducts[productIndex].quantity += 1;
-
-      setProducts([...newProducts]);
+      setProducts(newProducts);
 
       await AsyncStorage.setItem(
         '@GoMarketPlace:products',
-        JSON.stringify(products),
+        JSON.stringify(newProducts),
       );
     },
     [products],
@@ -87,16 +82,15 @@ const CartProvider: React.FC = ({ children }) => {
 
   const decrement = useCallback(
     async (id: string) => {
-      const productIndex = products.findIndex(product => product.id === id);
+      const newProducts = products.map(p =>
+        p.id === id ? { ...p, quantity: p.quantity - 1 } : { ...p },
+      );
 
-      const newProducts: Product[] = products;
-      newProducts[productIndex].quantity -= 1;
-
-      setProducts([...newProducts]);
+      setProducts(newProducts);
 
       await AsyncStorage.setItem(
         '@GoMarketPlace:products',
-        JSON.stringify(products),
+        JSON.stringify(newProducts),
       );
     },
     [products],
